@@ -1,0 +1,6 @@
+rootProject.name = 'FitnessApp'
+include 'auth-service'
+include 'user-service'
+include 'config-server'
+include 'card-service'
+

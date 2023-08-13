@@ -1,0 +1,20 @@
+server:
+  port: 9090
+
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: ${postgre}
+    url: jdbc:postgresql://localhost:5432/fitnessAuthDb
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
+
+jwt:
+  secretKey: ${java9secretkey}
+  issuer: ${java9issuer}
+  audience: ${java9audience}
