@@ -7,6 +7,7 @@ import org.berka.exception.UserManagerException;
 import org.berka.manager.IAuthManager;
 import org.berka.manager.ICardManager;
 import org.berka.mapper.IUserProfileMapper;
+import org.berka.rabbitmq.model.RegisterModel;
 import org.berka.repository.IUserProfileRepository;
 import org.berka.repository.entity.UserProfile;
 import org.berka.repository.enums.EStatus;
@@ -39,6 +40,19 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
     @Transactional
     public Boolean register(UserRegisterRequestDto dto) {
         UserProfile userProfile = IUserProfileMapper.INSTANCE.toUserProfile(dto);
+
+        try {
+            save(userProfile);
+            cardManager.saveCard(userProfile.getId());
+            return true;
+        } catch (Exception e) {
+            throw new UserManagerException(ErrorType.USER_NOT_CREATED);
+        }
+    }
+
+
+    public Boolean registerWithRabbitMq(RegisterModel model) {
+        UserProfile userProfile = IUserProfileMapper.INSTANCE.toUserProfile(model);
 
         try {
             save(userProfile);

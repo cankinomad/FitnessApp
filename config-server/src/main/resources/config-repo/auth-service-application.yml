@@ -12,9 +12,19 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: user
 
 
 jwt:
   secretKey: ${java9secretkey}
   issuer: ${java9issuer}
   audience: ${java9audience}
+
+rabbitmq:
+  auth-exchange: authExchange
+  register-queue: registerQueue
+  register-bindingKey: registerBindingKey

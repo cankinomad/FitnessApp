@@ -27,6 +27,10 @@ public class AuthController {
         return ResponseEntity.ok(service.register(dto));
     }
 
+    @PostMapping(REGISTERWITHRABBITMQ)
+    public ResponseEntity<RegisterResponseDto> registerWithRabbitMq(@RequestBody @Valid RegisterRequestDto dto) {
+        return ResponseEntity.ok(service.registerWithRabbitMq(dto));
+    }
     @PostMapping(ACTIVATION)
     public ResponseEntity<String> activateAccount(@RequestBody @Valid ActivateAccountRequestDto dto) {
         return ResponseEntity.ok(service.activateAccount(dto));

@@ -24,6 +24,11 @@ public class UserProfileController {
         return ResponseEntity.ok(service.register(dto));
     }
 
+    @PostMapping(SAVEWITHRABBITMQ)
+    public ResponseEntity<Boolean> registerWithRabbitMq(@RequestBody UserRegisterRequestDto dto) {
+        return ResponseEntity.ok(service.register(dto));
+    }
+
     @PostMapping(ACTIVATION)
     public ResponseEntity<String> activateAccount(@RequestParam Long authId) {
         return ResponseEntity.ok(service.activateAccount(authId));

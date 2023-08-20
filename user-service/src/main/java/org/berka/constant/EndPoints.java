@@ -8,6 +8,7 @@ public class EndPoints {
     //genel
     public static final String DELETEBYID ="/deletebyid/{id}";
     public static final String SAVE ="/save";
+    public static final String SAVEWITHRABBITMQ ="/savewithrabbitmq";
     public static final String ACTIVATION ="/activation";
     public static final String UPDATE ="/update";
     public static final String CREATEUSERTOKEN ="/createusertoken";

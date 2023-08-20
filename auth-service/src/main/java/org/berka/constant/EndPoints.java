@@ -13,6 +13,7 @@ public class EndPoints {
 
     //Auth
     public static final String REGISTER ="/register";
+    public static final String REGISTERWITHRABBITMQ ="/registerwithrabbitmq";
     public static final String LOGIN ="/login";
     public static final String ACTIVATION ="/activation";
 }

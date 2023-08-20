@@ -9,6 +9,7 @@ import org.berka.exception.AuthManagerException;
 import org.berka.exception.ErrorType;
 import org.berka.manager.IUserProfileManager;
 import org.berka.mapper.IAuthMapper;
+import org.berka.rabbitmq.producer.RegisterProducer;
 import org.berka.repository.IAuthRepository;
 import org.berka.repository.entity.Auth;
 import org.berka.repository.enums.EStatus;
@@ -26,12 +27,14 @@ public class AuthService extends ServiceManager<Auth, Long> {
     private final IAuthRepository repository;
     private final JwtTokenManager jwtTokenManager;
     private final IUserProfileManager userProfileManager;
+    private final RegisterProducer registerProducer;
 
-    public AuthService(IAuthRepository repository, JwtTokenManager jwtTokenManager, IUserProfileManager userProfileManager) {
+    public AuthService(IAuthRepository repository, JwtTokenManager jwtTokenManager, IUserProfileManager userProfileManager, RegisterProducer registerProducer) {
         super(repository);
         this.repository = repository;
         this.jwtTokenManager = jwtTokenManager;
         this.userProfileManager = userProfileManager;
+        this.registerProducer = registerProducer;
     }
 
     @Transactional
@@ -49,6 +52,28 @@ public class AuthService extends ServiceManager<Auth, Long> {
             auth.setActivationCode(CodeGenerator.generateCode());
             save(auth);
             userProfileManager.register(IAuthMapper.INSTANCE.toUserRegisterRequestDto(auth));
+            return IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
+        } catch (Exception e) {
+            throw new AuthManagerException(ErrorType.USER_NOT_CREATED);
+        }
+    }
+
+
+
+    public RegisterResponseDto registerWithRabbitMq(RegisterRequestDto dto) {
+        Auth auth = IAuthMapper.INSTANCE.toAuth(dto);
+
+        if (repository.existsByEmail(dto.getEmail())) {
+            throw new AuthManagerException(ErrorType.EMAIL_TAKEN);
+        }
+        if (repository.existsByUsername(dto.getUsername())) {
+            throw new AuthManagerException(ErrorType.USERNAME_EXIST);
+        }
+
+        try {
+            auth.setActivationCode(CodeGenerator.generateCode());
+            save(auth);
+            registerProducer.registerUser(IAuthMapper.INSTANCE.toRegisterModel(auth));
             return IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
         } catch (Exception e) {
             throw new AuthManagerException(ErrorType.USER_NOT_CREATED);

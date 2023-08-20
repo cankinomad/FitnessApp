@@ -2,6 +2,7 @@ package org.berka.mapper;
 
 import org.berka.dto.request.UpdateAuthRequestDto;
 import org.berka.dto.request.UserRegisterRequestDto;
+import org.berka.rabbitmq.model.RegisterModel;
 import org.berka.repository.entity.UserProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,4 +18,7 @@ public interface IUserProfileMapper {
 
     @Mapping(source = "authId",target = "id")
     UpdateAuthRequestDto toUpdateAuthRequestDto(final UserProfile userProfile);
+
+    @Mapping(source = "id",target = "authId")
+    UserProfile toUserProfile(final RegisterModel model);
 }
