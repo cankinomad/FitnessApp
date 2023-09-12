@@ -3,4 +3,5 @@ include 'auth-service'
 include 'user-service'
 include 'config-server'
 include 'card-service'
+include 'mail-service'
 

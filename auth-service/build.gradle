@@ -5,5 +5,6 @@ dependencies {
    implementation libs.springCloudOpenFeign
    implementation libs.springCloudConfigClient
    implementation libs.springBootRabbitMq
+   implementation libs.springBootSecurity
 }
 

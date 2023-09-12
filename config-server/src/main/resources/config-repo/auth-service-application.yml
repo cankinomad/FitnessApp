@@ -28,3 +28,5 @@ rabbitmq:
   auth-exchange: authExchange
   register-queue: registerQueue
   register-bindingKey: registerBindingKey
+  mail-queue: mailQueue
+  mail-bindingKey: mailBindingKey

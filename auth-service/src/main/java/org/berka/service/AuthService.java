@@ -9,6 +9,7 @@ import org.berka.exception.AuthManagerException;
 import org.berka.exception.ErrorType;
 import org.berka.manager.IUserProfileManager;
 import org.berka.mapper.IAuthMapper;
+import org.berka.rabbitmq.producer.MailProducer;
 import org.berka.rabbitmq.producer.RegisterProducer;
 import org.berka.repository.IAuthRepository;
 import org.berka.repository.entity.Auth;
@@ -16,6 +17,7 @@ import org.berka.repository.enums.EStatus;
 import org.berka.utility.CodeGenerator;
 import org.berka.utility.JwtTokenManager;
 import org.berka.utility.ServiceManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,13 +30,19 @@ public class AuthService extends ServiceManager<Auth, Long> {
     private final JwtTokenManager jwtTokenManager;
     private final IUserProfileManager userProfileManager;
     private final RegisterProducer registerProducer;
+    private final MailProducer mailProducer;
 
-    public AuthService(IAuthRepository repository, JwtTokenManager jwtTokenManager, IUserProfileManager userProfileManager, RegisterProducer registerProducer) {
+    private final PasswordEncoder passwordEncoder;
+
+
+    public AuthService(IAuthRepository repository, JwtTokenManager jwtTokenManager, IUserProfileManager userProfileManager, RegisterProducer registerProducer, MailProducer mailProducer, PasswordEncoder passwordEncoder) {
         super(repository);
         this.repository = repository;
         this.jwtTokenManager = jwtTokenManager;
         this.userProfileManager = userProfileManager;
         this.registerProducer = registerProducer;
+        this.mailProducer = mailProducer;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -61,7 +69,9 @@ public class AuthService extends ServiceManager<Auth, Long> {
 
 
     public RegisterResponseDto registerWithRabbitMq(RegisterRequestDto dto) {
+        dto.setPassword(passwordEncoder.encode(dto.getPassword()));
         Auth auth = IAuthMapper.INSTANCE.toAuth(dto);
+        System.out.println(auth);
 
         if (repository.existsByEmail(dto.getEmail())) {
             throw new AuthManagerException(ErrorType.EMAIL_TAKEN);
@@ -74,7 +84,9 @@ public class AuthService extends ServiceManager<Auth, Long> {
             auth.setActivationCode(CodeGenerator.generateCode());
             save(auth);
             registerProducer.registerUser(IAuthMapper.INSTANCE.toRegisterModel(auth));
-            return IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
+            mailProducer.sendMessage(IAuthMapper.INSTANCE.toMailModel(auth));
+            RegisterResponseDto registerResponseDto = IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
+            return registerResponseDto;
         } catch (Exception e) {
             throw new AuthManagerException(ErrorType.USER_NOT_CREATED);
         }
@@ -114,11 +126,14 @@ public class AuthService extends ServiceManager<Auth, Long> {
     }
 
     public String login(LoginRequestDto dto) {
-        Optional<Auth> optionalAuth = repository.findByUsernameAndPassword(dto.getUsername(), dto.getPassword());
+//        Optional<Auth> optionalAuth = repository.findByUsernameAndPassword(dto.getUsername(), dto.getPassword());
+        Optional<Auth> optionalAuth = repository.findByUsername(dto.getUsername());
 
-        if (optionalAuth.isEmpty()) {
+
+        if (optionalAuth.isEmpty() && !(passwordEncoder.matches(dto.getPassword(), optionalAuth.get().getPassword()))) {
             throw new AuthManagerException(ErrorType.LOGIN_ERROR);
         }
+
 
         if (!optionalAuth.get().getStatus().equals(EStatus.ACTIVE)) {
             return "Login olmaniz icin oncelikle hesabinizi aktif etmeniz gerekmektedir";
